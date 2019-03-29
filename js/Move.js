@@ -58,7 +58,7 @@
 		 * 判断将棋是否在九宫
 		 */
 		isIn_Fort: function(sq){
-			return this.IN_FORT_(sq) != 0
+			return this.IN_FORT_[sq] != 0
 		},
 		/**
 		 * 将 棋走法，要在九宫格内
@@ -129,9 +129,9 @@
 		SAME_FILE: function(sqSrc,sqDst){
 			return (((sqSrc ^ sqDst) & 0x0f) == 0);
 		},
-		//判断 兵棋 是否前进,红方是-16，黑方是 +16
-		isForward: function(sqSrc,sqDst){
-			return sqDst - sqSrc == (-16 + (game.board.isPlayer << 5));
+		//判断 兵棋 前进位置,红方是-16，黑方是 +16
+		isForward: function(sqSrc){
+			return sqSrc - 16 + (game.board.isPlayer << 5);
 		},
 		//判断 兵棋是否过河,红棋过河时，棋子位置的第八位 为 0 ；黑棋过河时，第八位 为 1
 		away_river: function(sqSrc){
@@ -203,7 +203,7 @@
 						return true;
 					}
 					//如果没有过河，则只能前进一格
-					return this.isForward(sqSrc,sqDst);
+					return sqDst == this.isForward(sqSrc);
 				default:
 					return false;
 			}
