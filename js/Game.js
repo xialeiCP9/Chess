@@ -13,11 +13,16 @@
 		this.loadAllResources("R.json",function(){
 			self.start();
 			self.bindEvent();
+			// 初始即为电脑走棋
+			if(self.board.com == self.board.isPlayer){
+				self.board.computerMove();
+			}
 		});
 	}
 
 	Game.prototype.start = function(){
 		this.board = new Board();
+		this.search = new Search();
 		var self = this;
 		
 		//开启定时器
@@ -71,6 +76,10 @@
 	Game.prototype.bindEvent = function(){
 		var self = this;
 		this.canvas.onclick = function(event){
+			//如果电脑正在思考，则不响应点击事件
+			if(self.board.busy){
+				return;
+			}
 			var mouseX = event.clientX ;
 			var mouseY = event.clientY ;
 			if(mouseX < 0 || mouseX > 365 || mouseY < 0 || mouseY > 405){
@@ -87,10 +96,15 @@
 				self.board.sqSelected = pos;
 			} else if(self.board.sqSelected > 0){ // 如果点击的不是已方棋子，而且已经点击了一个棋子，那么说明此时可以走子
 				self.board.addMove(P.move(self.board.sqSelected,pos));
+				//轮到电脑走棋
+				self.board.computerMove();
 			}
 			
 		}
 		this.canvas.onmousemove = function(event){
+			if(self.board.busy){
+				return;
+			}
 			var mouseX = event.clientX ;
 			var mouseY = event.clientY ;
 			if(mouseX < 0 || mouseX > 365 || mouseY < 0 || mouseY > 405){

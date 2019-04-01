@@ -48,6 +48,10 @@
 		this.mvLast = 0;
 		//是否玩家走棋 0 红方 1 黑方
 		this.isPlayer = 0;
+		//电脑方
+		this.com = 1;
+		//电脑是否在思考
+		this.busy = false;
 		//移动到棋盘的位置
 		this.move_piece = -1;
 		this.init();
@@ -55,6 +59,9 @@
 	//初始化棋盘
 	Board.prototype.init = function(){
 		this.fromFen();
+		//设置走法数组、吃子数组
+		this.mvList = [0];
+		this.pcList = [0];
 	}
 	//更新棋盘
 	Board.prototype.update = function(){
@@ -73,6 +80,13 @@
 			var sqDstY = this.rankY(sqDst - 51) * 40 + 8;
 			var image = game.R[this.PIECE_NAME[this.squares[sqDst]] + "s"];
 			game.ctx.drawImage(image,sqDstX,sqDstY,41,41);
+		}
+		//电脑在思考时，打印文字
+		if(this.busy){
+			game.ctx.font = "20px 微软雅黑";
+			game.ctx.fillStyle = "#000";
+			game.ctx.textAlign = "center";
+			game.ctx.fillText("Thinking...",game.canvas.width / 2,game.canvas.height * (1 - 0.618));
 		}
 		//本次选择了第一个棋子
 		if(this.sqSelected > 0){
@@ -131,10 +145,20 @@
 	Board.prototype.addPiece = function(sq,pc){
 		this.squares[sq] = pc;
 	}
+	//转换执子方
+	Board.prototype.changeSide = function(){
+		this.isPlayer = 1 - this.isPlayer;
+	}
 	//走一步棋
 	Board.prototype.makeMove = function(mv){
 		this.movePiece(mv);
+		this.changeSide();
 		return true;
+	}
+	//撤销上一步的走棋
+	Board.prototype.unmakeMove = function(){
+		this.changeSide();
+		this.unMovePiece();//取消上一步走棋
 	}
 	//根据走法移动棋子，删除终点位置的棋子，并将起点位置的棋子放到终点位置上
 	Board.prototype.movePiece = function(mv){
@@ -142,10 +166,27 @@
 		var sqDst = P.DST(mv); // 终点位置
 		var pcSrc = this.squares[sqSrc]; //起点位置的棋子
 		var pcDst = this.squares[sqDst]; //终点位置的棋子
+		this.pcList.push(pcDst); //记录每走一步的替代的棋子（空子和对方棋子均要记录)
 		//起点位置的棋子置为 0 
 		this.squares[sqSrc] = 0;
 		//将起点位置的棋子，添加到终点位置
 		this.addPiece(sqDst,pcSrc);
+		//走法存入走法列表
+		this.mvList.push(mv);
+	}
+	//取消上一步走棋
+	Board.prototype.unMovePiece = function(){
+		var mv = this.mvList.pop(); //取出最后一步走棋方式
+		var sqSrc = P.SRC(mv);
+		var sqDst = P.DST(mv);
+		//将起点置为原终点的棋子
+		this.squares[sqSrc] = this.squares[sqDst];
+		//终点置为最后一步吃掉的子
+		this.squares[sqDst] = this.pcList.pop();
+		//如果此时该电脑走棋
+		if(this.com == this.isPlayer){
+			this.computerMove();
+		}
 	}
 	//判断这步棋是否合法，若合法，则执行这步棋
 	Board.prototype.addMove = function(mv){
@@ -162,6 +203,19 @@
 
 		this.mvLast = mv;
 		this.sqSelected = 0;
+	}
+	//电脑走一步棋
+	Board.prototype.computerMove = function(){
+		//没轮到电脑走棋
+		if(this.com != this.isPlayer){
+			this.busy = false;
+			return;
+		}
+		this.busy = true;
+		var mv = game.search.searchMove();//搜索出走法
+		//走子
+		this.addMove(mv);
+		this.busy = false;
 	}
 	Board.prototype.fromFen = function(){
 		//根据FEN串初始化棋局

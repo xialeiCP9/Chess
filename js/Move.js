@@ -95,7 +95,7 @@
 		 * 象的另外两个走法合法，则返回象眼位置
 		 */
 		BISHOP_PIN: function(sqSrc,sqDst){
-			return (sqSrc + sqDst) >> 2;
+			return (sqSrc + sqDst) >> 1;
 		},
 		/**
 		 * 马 棋有八个方向的棋子可走: 
