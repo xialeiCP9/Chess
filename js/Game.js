@@ -27,10 +27,13 @@
 		
 		//开启定时器
 		setInterval(function(){
-			self.ctx.clearRect(0,0,self.canvas.width,self.canvas.height);
 			
-			self.board.render();
-			self.board.update();
+				self.ctx.clearRect(0,0,self.canvas.width,self.canvas.height);
+			
+				self.board.render();
+				self.board.update();
+			
+			
 		},20);
 	}
 
@@ -97,7 +100,10 @@
 			} else if(self.board.sqSelected > 0){ // 如果点击的不是已方棋子，而且已经点击了一个棋子，那么说明此时可以走子
 				self.board.addMove(P.move(self.board.sqSelected,pos));
 				//轮到电脑走棋
-				self.board.computerMove();
+				setTimeout(function(){
+					self.board.computerMove();
+				},250)
+				
 			}
 			
 		}

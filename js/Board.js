@@ -150,15 +150,30 @@
 		this.isPlayer = 1 - this.isPlayer;
 	}
 	//走一步棋
-	Board.prototype.makeMove = function(mv){
-		this.movePiece(mv);
+	Board.prototype.makeMove = function(mv,arr){
+		var sqSrc = P.SRC(mv); // 起点位置
+		var sqDst = P.DST(mv); // 终点位置
+		var pcSrc = arr[sqSrc]; //起点位置的棋子
+		var pcDst = arr[sqDst]; //终点位置的棋子
+		this.pcList.push(pcDst); //记录每走一步的替代的棋子（空子和对方棋子均要记录)
+		//起点位置的棋子置为 0 
+		arr[sqSrc] = 0;
+		//将起点位置的棋子，添加到终点位置
+		arr[sqDst] = pcSrc;
+		//走法存入走法列表
+		this.mvList.push(mv);
 		this.changeSide();
-		return true;
 	}
 	//撤销上一步的走棋
-	Board.prototype.unmakeMove = function(){
+	Board.prototype.unmakeMove = function(arr){
 		this.changeSide();
-		this.unMovePiece();//取消上一步走棋
+		var mv = this.mvList.pop(); //取出最后一步走棋方式
+		var sqSrc = P.SRC(mv);
+		var sqDst = P.DST(mv);
+		//将起点置为原终点的棋子
+		arr[sqSrc] = arr[sqDst];
+		//终点置为最后一步吃掉的子
+		arr[sqDst] = this.pcList.pop();
 	}
 	//根据走法移动棋子，删除终点位置的棋子，并将起点位置的棋子放到终点位置上
 	Board.prototype.movePiece = function(mv){
@@ -180,7 +195,7 @@
 		var sqSrc = P.SRC(mv);
 		var sqDst = P.DST(mv);
 		//将起点置为原终点的棋子
-		this.squares[sqSrc] = this.squares[sqDst];
+		this.squares[sqSrc] = squares[sqDst];
 		//终点置为最后一步吃掉的子
 		this.squares[sqDst] = this.pcList.pop();
 		//如果此时该电脑走棋
@@ -189,7 +204,7 @@
 		}
 	}
 	//判断这步棋是否合法，若合法，则执行这步棋
-	Board.prototype.addMove = function(mv){
+	Board.prototype.addMove = function(mv,squares){
 		//判断是否合法
 		if(!P.isLegalMove(mv)){
 			console.log("走棋不合法");
@@ -197,10 +212,9 @@
 		}
 
 		//执行这步棋
-		if(!this.makeMove(mv)){
-			return;
-		}
-
+		this.changeSide();
+		this.movePiece(mv);
+		
 		this.mvLast = mv;
 		this.sqSelected = 0;
 	}
@@ -212,9 +226,10 @@
 			return;
 		}
 		this.busy = true;
-		var mv = game.search.searchMove();//搜索出走法
+		var mv = game.search.searchMove(this.squares);//搜索出走法
+		console.log("bestMv:"+mv);
 		//走子
-		this.addMove(mv);
+		this.addMove(mv,this.squares);
 		this.busy = false;
 	}
 	Board.prototype.fromFen = function(){
