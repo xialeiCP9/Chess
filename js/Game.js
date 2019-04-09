@@ -23,6 +23,7 @@
 	Game.prototype.start = function(){
 		this.board = new Board();
 		this.search = new Search();
+		this.gen = new Gen();
 		var self = this;
 		
 		//开启定时器
@@ -98,7 +99,7 @@
 				}
 				self.board.sqSelected = pos;
 			} else if(self.board.sqSelected > 0){ // 如果点击的不是已方棋子，而且已经点击了一个棋子，那么说明此时可以走子
-				self.board.addMove(P.move(self.board.sqSelected,pos));
+				self.board.addMove(P.move(self.board.sqSelected,pos),game.board.squares);
 				//轮到电脑走棋
 				setTimeout(function(){
 					self.board.computerMove();

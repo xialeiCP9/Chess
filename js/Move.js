@@ -207,6 +207,83 @@
 				default:
 					return false;
 			}
+		},
+		//判断将棋是否被攻击
+		checkMate: function(squares){
+			var pcSelfSide = this.side_tag(game.board.isPlayer);
+			var pcOppSide = this.opp_side_tag(game.board.isPlayer);
+			//搜索棋盘，直到遇到本方的将棋
+			for(var i=0;i<256;i++){
+				if(squares[i] != game.board.PIECE_KING + pcSelfSide){
+					continue;
+				}
+
+				//假设将棋为“兵棋”，向上走一步时，是否遇到对方的兵棋,如果遇到，则说明兵棋可以威胁到我方的将棋
+				if(squares[this.isForward(i)] == pcOppSide + game.board.PIECE_PAWN){
+					return true;
+				}
+				//将棋的左边和右边，是否是对方的兵棋
+				if(squares[i-1] == pcOppSide + game.board.PIECE_PAWN || squares[i+1] == pcOppSide + game.board.PIECE_PAWN){
+					return true;
+				}
+				//判断对方的“马”是否能够攻击到我方的将
+				for(var j=0;j<4;j++){
+					//马腿方向有棋子
+					if(squares[i + game.gen.ADVISOR_DELTA[j]] != 0){
+						continue;
+					}
+					if(squares[i + game.gen.KNIGHT_DELTA[j][0]] == game.board.PIECE_KNIGHT ||
+						squares[i + game.gen.KNIGHT_DELTA[j][1]] == game.board.PIECE_KNIGHT){
+						return true;
+					}
+				}
+				//判断对方的“炮”能否攻击到我方的将
+				for(var j=0;j<4;j++){
+					var delta = game.gen.KING_DELTA[j];
+					var sqDst = i + delta;
+					while(game.board.inBoard(sqDst)){
+						var pcDst = squares[sqDst];
+						//若该方向遇到了棋子
+						if(pcDst > 0){
+							//棋子是对方的车或者帅，会被将军
+							if(pcDst - pcOppSide == game.board.PIECE_ROOK || pcDst - pcOppSide == game.board.PIECE_KING){
+								return true;
+							}
+							//如果没有将军，则跳出循环，此时已经过山
+							break;
+						}
+						sqDst += delta;
+					}
+					//过山后，查看下一个棋子是否是对方的炮
+					sqDst += delta;
+					while(game.board.inBoard(sqDst)){
+						var pcDst = squares[sqDst];
+						if(pcDst > 0){
+							if(pcDst - pcOppSide == game.board.PIECE_CANNON){
+								return true;
+							}
+							break;
+						}
+						sqDst += delta;
+					}
+				}
+				return false;
+			}
+			return false;
+		},
+		//检测是否被将死,false-不会被将死 true - 无棋可走
+		isMate: function(){
+			var mvs = game.gen.generatorMoves(game.board.squares);
+			var arr = game.board.squares.concat();
+			for(var i=0;i<mvs.length;i++){
+				//尝试下一个子，如果不会被将军，则说明此时还可以走子
+				if(game.board.makeMove(mvs[i],arr)){
+					game.board.unmakeMove(arr,true);
+					return false;
+				}
+			}
+			return true;
 		}
+		
 	}
 })()

@@ -4,25 +4,24 @@
 (function(){
 	var Search = window.Search = function(){
 		this.MAXDEPTH = 4;
-		this.gen = new Gen();
-		this.count = 0;
 	}
 	Search.prototype.searchMove = function(squares){
 		var alpha = -Infinity,beta = Infinity;
 		var best = -Infinity;
 		var arr = squares.concat();
-		var mvs = this.gen.generatorMoves(squares);
+		var mvs = game.gen.generatorMoves(squares);
 		var value = 0;
 		var bestMove = 0;
 
 		for(var i=0;i<mvs.length;i++){
-			game.board.makeMove(mvs[i],arr);
+			if(!game.board.makeMove(mvs[i],arr))
+				continue;
 			var value = this.minSearch(arr,this.MAXDEPTH-1,alpha,beta);
 			if(value > best){
 				best = value;
 				bestMove = mvs[i];
 			}
-			game.board.unmakeMove(arr);
+			game.board.unmakeMove(arr,true);
 		}
 		return bestMove;
 	}
@@ -31,14 +30,15 @@
 			return evaluate(squares,1);
 		}
 		var best = -Infinity;
-		var mvs = this.gen.generatorMoves(squares);
+		var mvs = game.gen.generatorMoves(squares);
 		var value = 0;
 		var mv = 0;
 		for(var i=0;i<mvs.length;i++){
 			mv = mvs[i];
-			game.board.makeMove(mv,squares);
+			if(!game.board.makeMove(mv,squares))
+				continue;
 			value = this.minSearch(squares,depth-1,alpha,best>beta?best:beta);
-			game.board.unmakeMove(squares);
+			game.board.unmakeMove(squares,true);
 			if(value > best){
 				best = value;
 			}
@@ -50,20 +50,19 @@
 		return best;
 	}
 	Search.prototype.minSearch = function(squares,depth,alpha,beta){
-		this.count++;
-		console.log("count:"+this.count);
 		if(depth == 0){
 			return evaluate(squares,1);
 		}
 		var best = Infinity;
-		var mvs = this.gen.generatorMoves(squares);
+		var mvs = game.gen.generatorMoves(squares);
 		var value = 0;
 		var mv = 0;
 		for(var i=0;i<mvs.length;i++){
 			mv = mvs[i];
-			game.board.makeMove(mv,squares);
+			if(!game.board.makeMove(mv,squares))
+				continue;
 			value = this.maxSearch(squares,depth-1,best<alpha?best:alpha,beta);
-			game.board.unmakeMove(squares);
+			game.board.unmakeMove(squares,true);
 			if(value < best){
 				best = value;
 			}
@@ -71,7 +70,6 @@
 				break;
 			}
 		}
-		console.log("minBest:" + best);
 		return best;
 	}
 })()

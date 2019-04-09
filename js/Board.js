@@ -162,11 +162,18 @@
 		arr[sqDst] = pcSrc;
 		//走法存入走法列表
 		this.mvList.push(mv);
+		
+		//走棋时被将军，则撤销该步棋
+		if(P.checkMate(arr)){
+			this.unmakeMove(arr,false);
+			return false;
+		}
 		this.changeSide();
+		return true;
 	}
 	//撤销上一步的走棋
-	Board.prototype.unmakeMove = function(arr){
-		this.changeSide();
+	Board.prototype.unmakeMove = function(arr,isChangeSide){
+		isChangeSide && this.changeSide();
 		var mv = this.mvList.pop(); //取出最后一步走棋方式
 		var sqSrc = P.SRC(mv);
 		var sqDst = P.DST(mv);
@@ -210,6 +217,7 @@
 			console.log("走棋不合法");
 			return;
 		}
+		
 
 		//执行这步棋
 		this.changeSide();
@@ -217,6 +225,11 @@
 		
 		this.mvLast = mv;
 		this.sqSelected = 0;
+		//走完后，判断是否将军
+		if(P.isMate()){
+			var result = this.isPlayer == this.com ? "你赢了" : "你输了";
+			console.log("result:" + result);
+		}
 	}
 	//电脑走一步棋
 	Board.prototype.computerMove = function(){
@@ -227,7 +240,6 @@
 		}
 		this.busy = true;
 		var mv = game.search.searchMove(this.squares);//搜索出走法
-		console.log("bestMv:"+mv);
 		//走子
 		this.addMove(mv,this.squares);
 		this.busy = false;
